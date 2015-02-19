@@ -11,6 +11,7 @@
 #include <Game Engine/InputManager.h>
 #include <Game Engine/Timing.h>
 #include <Game Engine/Widget.h>
+#include "Level.h"
 
 class Game
 {
@@ -24,5 +25,6 @@ class Game
 	GameEngine::Window _window;
 	int _screenWidth;
 	int _screenHeight;
+	Level _level;
 };
 

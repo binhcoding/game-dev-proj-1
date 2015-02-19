@@ -24,4 +24,5 @@ void Game::Init()
 {
 	GameEngine::Init();
 	_window.Create("Game Engine", _screenWidth, _screenHeight, 0);
+	_level.Init("Maps/level1.tmx");
 }
