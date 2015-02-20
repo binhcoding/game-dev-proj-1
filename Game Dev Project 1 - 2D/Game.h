@@ -21,10 +21,21 @@ class Game
 	void Run();
 	private:
 	void Init();
+	void InitShaders();
+	void Update();
+	void Draw();
+	void Input();
 
 	GameEngine::Window _window;
+	GameEngine::Camera2D _camera; ///< Main Camera
+	GameEngine::GLSLProgram _textureProgram; ///< The shader program
+	GameEngine::FpsLimiter _fpsLimiter;
+	GameEngine::InputManager _inputManager; ///< Handles input
+
 	int _screenWidth;
 	int _screenHeight;
+	float _maxFps;
+	float _fps;
 	Level _level;
 };
 

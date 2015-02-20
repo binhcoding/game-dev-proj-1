@@ -12,7 +12,7 @@ namespace GameEngine
 	{
 		public:
 		Glyph();
-		Glyph(const glm::vec4& destRect, const glm::vec4& uvRect, 
+		Glyph(const glm::vec4& destRect, const glm::vec4& uvRect,
 			GLuint Texture, float Depth, const ColorRGBA8& color) : texture(Texture), depth(Depth)
 		{
 			topLeft.color = color;
@@ -30,6 +30,13 @@ namespace GameEngine
 			topRight.color = color;
 			topRight.SetPosition(destRect.x + destRect.z, destRect.y + destRect.w);
 			topRight.SetUV(uvRect.x + uvRect.z, uvRect.y + uvRect.w);
+		}
+		Glyph(GLuint Texture, float Depth, Vertex BottomLeft, Vertex BottomRight,
+			Vertex TopLeft, Vertex TopRight) : texture(Texture), depth(Depth),
+			topLeft(TopLeft), bottomLeft(BottomLeft), topRight(TopRight), bottomRight(BottomRight)
+
+		{
+
 		}
 		GLuint texture;
 		float depth;
@@ -57,6 +64,8 @@ namespace GameEngine
 		void Begin(GlyphSortType sortType = GlyphSortType::TEXTURE);
 		void End();
 		void Draw(const glm::vec4& destRect, const glm::vec4& uvRect, GLuint texture, float depth, const ColorRGBA8& color);
+		void Draw(Vertex bottomLeft, Vertex bottomRight, Vertex topLeft, Vertex topRight,
+			GLuint texture, float depth);
 		void RenderBatches();
 		private:
 		void CreateRenderBatches();

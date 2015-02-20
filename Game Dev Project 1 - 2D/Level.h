@@ -10,6 +10,7 @@ class Level
 	Level();
 	~Level();
 	void Init(const std::string& filePath);
+	void Draw();
 	private:
 	static bool CharRemoval(char c);
 

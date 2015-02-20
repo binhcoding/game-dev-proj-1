@@ -7,6 +7,8 @@
 #include "base64.h"
 #include <algorithm>
 #include "Utility.h"
+#include <Game Engine/GLTexture.h>
+#include <Game Engine/ImageLoader.h>
 
 Level::Level()
 {
@@ -36,159 +38,91 @@ void Level::Init(const std::string& filePath)
 	_tileMap.Init(&doc);
 
 
-	
-	// root node
-	//for (rapidxml::xml_attribute<> *attr = node->first_attribute(); attr; attr = attr->next_attribute())
-	//{
-	//	if (std::strcmp(attr->name(), "version") == 0)
-	//	{
-	//		_tileMap.map.version = atoi(attr->value());
-	//	}
+	// using tileset sources, decode their pngs into memory
+	GameEngine::GLTexture textureData = GameEngine::ImageLoader::LoadPNG(_tileMap.GetTileSets()[0].source);
+	// texture data loaded
 
-	//	if (std::strcmp(attr->name(), "width") == 0)
-	//	{
-	//		_tileMap.map.width = atoi(attr->value());
-	//	}
+	// because the entire atlas is in memory, utilize the uv space to select a piece of the image
+	_spriteBatch.Init();
+	_spriteBatch.Begin();
 
-	//	if (std::strcmp(attr->name(), "height") == 0)
-	//	{
-	//		_tileMap.map.height = atoi(attr->value());
-	//	}
+	// the tile map data is stored sequentially
+	// if the map is 100x100
+	// that means each row is 100 nodes
+	std::vector<TileLayer>::iterator iter = _tileMap.GetTileLayers()->begin();
 
-	//	if (std::strcmp(attr->name(), "tilewidth") == 0)
-	//	{
-	//		_tileMap.map.tileWidth = atoi(attr->value());
-	//	}
+	GameEngine::ColorRGBA8 color(255, 255, 255, 255);
 
-	//	if (std::strcmp(attr->name(), "tileheight") == 0)
-	//	{
-	//		_tileMap.map.tileHeight = atoi(attr->value());
-	//	}
-	//}
+	// only one tile data atm
 
-	//rapidxml::xml_node<>* childNode = node->first_node();
-	//for (rapidxml::xml_attribute<> *attr = childNode->first_attribute(); attr; attr = attr->next_attribute())
-	//{
-	//	if (std::strcmp(attr->name(), "firstgid") == 0)
-	//	{
-	//		_tileMap.tileSet.firstgid = atoi(attr->value());
-	//	}
+	int tileHeight = _tileMap.GetTileHeight();
+	int tileWidth = _tileMap.GetTileWidth();
+	int sourceWidth = _tileMap.GetTileSets()[0].width;
+	int tilesPerRow = sourceWidth / _tileMap.GetTileSets()[0].tileWidth;
 
-	//	if (std::strcmp(attr->name(), "name") == 0)
-	//	{
-	//		_tileMap.tileSet.name = std::string(attr->value());
-	//	}
+	for (int i = 0; i < _tileMap.GetTileWidth(); i++)
+	{
+		for (int j = 0; j < _tileMap.GetTileHeight(); j++)
+		{
+			//to find this image i must know the texture atlas width and height
+			// 2048x2048
+			// if the gid is 66 - 1
+			// and the tile sizes are 64x64
+			// that means the first row has 32 tiles
+			// so 65 would be the 3rd row 2nd column
+			// the top left pixel point would be at 64 x 128
+			// u = 64/2048
+			// v = 128/2048
+			//iter->tileData[(i+1)*j]
 
-	//	if (std::strcmp(attr->name(), "tilewidth") == 0)
-	//	{
-	//		_tileMap.tileSet.tileWidth = atoi(attr->value());
-	//	}
+			int gid = iter->tileData[(i + 1)*j];
+			gid -= _tileMap.GetTileSets()[0].firstGid - 1;
+			int sourceY = ceil((float)gid / tilesPerRow) - 1;
+			int sourceX = gid - (tilesPerRow * sourceY) - 1;
+			
+			// TURN THESE into coordinates
+			sourceY = sourceY * tileWidth;
+			sourceX = sourceX * tileWidth;
 
-	//	if (std::strcmp(attr->name(), "tileheight") == 0)
-	//	{
-	//		_tileMap.tileSet.tileHeight = atoi(attr->value());
-	//	}
-	//}
+			// first 2 values is top left
+			// last 2 values is bottom right
+			float uStart = (float)(sourceX) / sourceWidth;
+			float vStart = (float)(sourceWidth - (sourceY + tileWidth)) / sourceWidth;
 
-	//childNode = childNode->first_node();
-	//for (rapidxml::xml_attribute<> *attr = childNode->first_attribute(); attr; attr = attr->next_attribute())
-	//{
-	//	if (std::strcmp(attr->name(), "source") == 0)
-	//	{
-	//		_tileMap.tileSet.source.source = std::string(attr->value());
-	//	}
+			float uEnd = (float)(sourceX + tileWidth) / sourceWidth;
+			float vEnd = (float)(sourceWidth - (sourceY)) / sourceWidth;
 
-	//	if (std::strcmp(attr->name(), "width") == 0)
-	//	{
-	//		_tileMap.tileSet.source.width = atoi(attr->value());
-	//	}
+			glm::vec4 uvSpace(uStart, vStart, uEnd, vEnd);
+			glm::vec4 positionAndSize = glm::vec4(i * tileWidth, j * tileWidth, tileWidth, tileWidth);
 
-	//	if (std::strcmp(attr->name(), "height") == 0)
-	//	{
-	//		_tileMap.tileSet.source.height = atoi(attr->value());
-	//	}
+			GameEngine::Vertex bottomLeft;
+			bottomLeft.color = color;
+			bottomLeft.SetPosition(positionAndSize.x, positionAndSize.y);
+			bottomLeft.SetUV(uStart, vStart);
 
-	//}
+			GameEngine::Vertex topLeft;
+			topLeft.color = color;
+			topLeft.SetPosition(positionAndSize.x, positionAndSize.y + positionAndSize.w);
+			topLeft.SetUV(uStart, vEnd);
 
-	//TileLayer layer;
+			GameEngine::Vertex topRight;
+			topRight.color = color;
+			topRight.SetPosition(positionAndSize.x + positionAndSize.z, positionAndSize.y + positionAndSize.w);
+			topRight.SetUV(uEnd, vEnd);
 
-	//childNode = node->first_node();
-	//childNode = childNode->next_sibling();
-
-	//for (rapidxml::xml_attribute<> *attr = childNode->first_attribute(); attr; attr = attr->next_attribute())
-	//{
-	//	if (std::strcmp(attr->name(), "name") == 0)
-	//	{
-	//		layer.name = std::string(attr->value());
-	//	}
-
-	//	if (std::strcmp(attr->name(), "width") == 0)
-	//	{
-	//		layer.width = atoi(attr->value());
-	//	}
-
-	//	if (std::strcmp(attr->name(), "height") == 0)
-	//	{
-	//		layer.height = atoi(attr->value());
-	//	}
-
-	//}
-
-	//childNode = childNode->first_node();
-
-	//for (rapidxml::xml_attribute<> *attr = childNode->first_attribute(); attr; attr = attr->next_attribute())
-	//{
-	//	if (std::strcmp(attr->name(), "encoding") == 0)
-	//	{
-	//		layer.data.encoding = std::string(attr->value());
-	//	}
-
-	//	if (std::strcmp(attr->name(), "compression") == 0)
-	//	{
-	//		layer.data.compression = std::string(attr->value());
-	//	}
-	//}
-
-	//std::string prepForDecode = std::string(childNode->value());
-	//
-	//
-
-	//prepForDecode.erase(
-	//	std::remove_if(prepForDecode.begin(), prepForDecode.end(), &Level::CharRemoval), 
-	//	prepForDecode.end());
-	//layer.data.data = prepForDecode;
-
-	////z_stream infstream;
-	//
-
-	//// only work with one layer for now
-	//// decode base 64
-
-	//_tileMap.tileLayer.push_back(layer);
-
-	//// only have one to work with
-	//// decode base 64
-	//base64 b;
-	//
-	//std::string decoded = b.base64_decode(layer.data.data);
-	//std::string uncompressed = Utility::Decompress(decoded);
-	//std::vector<char> mapData(uncompressed.begin(), uncompressed.end());
-
-	//std::cout << "Level Data" << std::endl;
+			GameEngine::Vertex bottomRight;
+			bottomRight.color = color;
+			bottomRight.SetPosition(positionAndSize.x + positionAndSize.z, positionAndSize.y);
+			bottomRight.SetUV(uEnd, vStart);
 
 
-	// parse ze file
-	// overallstructure
-	// <map>
-	//	   <tileset>
-	//     </tileset>
-	//	   <layer>
-	//			<data> </data>
-	//     </layer>
-	//	   <layer>
-	//			<data> </data>
-	//	   </layer>
-	// </map>
+			_spriteBatch.Draw(bottomLeft, bottomRight, topLeft, topRight, textureData.id, 0.0f);
+		}
+	}
+
+	_spriteBatch.End();
+
+	std::cout << "Test";
 }
 
 bool Level::CharRemoval(char c)
@@ -201,4 +135,9 @@ bool Level::CharRemoval(char c)
 		default:
 			return false;
 	}
+}
+
+void Level::Draw()
+{
+	_spriteBatch.RenderBatches();
 }

@@ -28,6 +28,30 @@ class TileMap
 	TileMap();
 	~TileMap();
 	void Init(rapidxml::xml_document<>* node);
+	std::vector<TileSet> GetTileSets()
+	{
+		return _tileSets;
+	}
+	int GetWidth()
+	{
+		return _width;
+	}
+	int GetHeight()
+	{
+		return _height;
+	}
+	std::vector<TileLayer>* GetTileLayers()
+	{
+		return &_tileLayers;
+	}
+	int GetTileWidth()
+	{
+		return _tileWidth;
+	}
+	int GetTileHeight()
+	{
+		return _tileHeight;
+	}
 	private:
 	void PopulateMap(rapidxml::xml_node<>* node);
 	void AddTileSet(rapidxml::xml_node<>* node);
