@@ -60,9 +60,11 @@ void Level::Init(const std::string& filePath)
 	int sourceWidth = _tileMap.GetTileSets()[0].width;
 	int tilesPerRow = sourceWidth / _tileMap.GetTileSets()[0].tileWidth;
 
-	for (int i = 0; i < _tileMap.GetTileWidth(); i++)
+	int index = 0;
+
+	for (int i = 0; i < _tileMap.GetWidth(); i++)
 	{
-		for (int j = 0; j < _tileMap.GetTileHeight(); j++)
+		for (int j = 0; j < _tileMap.GetHeight(); j++)
 		{
 			//to find this image i must know the texture atlas width and height
 			// 2048x2048
@@ -75,7 +77,7 @@ void Level::Init(const std::string& filePath)
 			// v = 128/2048
 			//iter->tileData[(i+1)*j]
 
-			int gid = iter->tileData[(i + 1)*j];
+			int gid = iter->tileData[index];
 			gid -= _tileMap.GetTileSets()[0].firstGid - 1;
 			int sourceY = ceil((float)gid / tilesPerRow) - 1;
 			int sourceX = gid - (tilesPerRow * sourceY) - 1;
@@ -93,7 +95,7 @@ void Level::Init(const std::string& filePath)
 			float vEnd = (float)(sourceWidth - (sourceY)) / sourceWidth;
 
 			glm::vec4 uvSpace(uStart, vStart, uEnd, vEnd);
-			glm::vec4 positionAndSize = glm::vec4(i * tileWidth, j * tileWidth, tileWidth, tileWidth);
+			glm::vec4 positionAndSize = glm::vec4(j * tileWidth, -i * tileWidth, tileWidth, tileWidth);
 
 			GameEngine::Vertex bottomLeft;
 			bottomLeft.color = color;
@@ -117,6 +119,7 @@ void Level::Init(const std::string& filePath)
 
 
 			_spriteBatch.Draw(bottomLeft, bottomRight, topLeft, topRight, textureData.id, 0.0f);
+			index++;
 		}
 	}
 
